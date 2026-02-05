@@ -1,23 +1,8 @@
-import { useEffect } from "react";
-import api from "./services/axios";
+import AppRouter from "./router/router.tsx";
+import React from "react";
 
 function App() {
-  useEffect(() => {
-    api.get("/")
-      .then(res => {
-        console.log("BACK CONNECTÉ ✅", res.data);
-      })
-      .catch(err => {
-        console.error("BACK NON CONNECTÉ ❌", err);
-      });
-  }, []);
-
-  return (
-    <div>
-      Mon application
-    </div>
-  );
+  return <AppRouter />;
 }
 
 export default App;
-
