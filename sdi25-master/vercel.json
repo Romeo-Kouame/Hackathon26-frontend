@@ -1,9 +1,6 @@
 {
   "rewrites": [
-     {
-        "source": "/api/:path*",
-        "destination": "https://hackathon26-backend-2.onrender.com"
-      }
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "builds": [
     {
