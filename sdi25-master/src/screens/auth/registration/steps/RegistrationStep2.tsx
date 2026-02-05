@@ -3,6 +3,7 @@ import HashLoader from "react-spinners/HashLoader";
 import { useState, useEffect } from "react";
 import React from "react";
 
+
 import {
   getOptionLabel,
   getOptionValue,
@@ -62,109 +63,102 @@ export default function RegistrationStep2({
   const listSchool = otherSchool;
 
   // 🔥 Chargement des données au montage du composant
-  useEffect(() => {
-    const initializeData = async () => {
-      try {
-        console.log("🔵 1. Début du chargement des données");
+ useEffect(() => {
+  const initializeData = async () => {
+    try {
+      console.log("🔵 1. Début du chargement des données");
 
-        // Récupérer comeFromEsatic
-        const storedData = secureLocalStorage.getItem("comeFromEsatic");
-        console.log("🔵 2. comeFromEsatic:", storedData);
+      const storedData = secureLocalStorage.getItem("comeFromEsatic");
+      console.log("🔵 2. comeFromEsatic:", storedData);
 
-        if (storedData !== true && storedData !== false) {
-          console.log("❌ comeFromEsatic n'est pas défini correctement");
-          setIsReady(true);
-          return;
-        }
-
-        const isEsatic = storedData === true;
-        setComeFromEsatic(isEsatic);
-
-        // Si pas ESATIC, utiliser la liste des autres écoles
-        if (!isEsatic) {
-          setListClass(listSchool);
-        }
-
-        // Préparer les données pour l'API
-        const data = {
-          esatic: isEsatic ? 1 : 0,
-        };
-
-        console.log("🔵 3. Envoi des données à l'API:", data);
-
-        // 🔥 Appel API - AWAIT est important ici
-        const result = await handleServiceGetLevelsList(data);
-
-        console.log("🔵 4. Résultat de l'API:", result);
-
-        if (result && result.niveaux) {
-          console.log("🔵 5. Niveaux reçus:", result.niveaux);
-
-          // Transformer les données
-          const temp: LevelOption[] = result.niveaux.map(
-            (item: { id: number; libelle: string; classes: any[] }) => {
-              console.log("🔵 6. Mapping niveau:", item.libelle);
-              return {
-                value: item.id,
-                label: item.libelle,
-                classes: item.classes.map((classe: { id: number; libelle: string }) => ({
-                  value: classe.id,
-                  label: classe.libelle,
-                })),
-              };
-            }
-          );
-
-          console.log("🔵 7. Données transformées:", temp);
-
-          setBaseLevel(temp);
-          secureLocalStorage.setItem("levelsList", temp);
-
-          console.log("✅ Niveaux chargés avec succès:", temp.length, "niveaux");
-        } else {
-          console.log("❌ Aucune donnée de niveaux reçue");
-        }
-
-        // Récupérer les informations du leader si elles existent
-        const storedLeaderInfo = secureLocalStorage.getItem("leaderInformation") as LeaderInformation | null;
-
-        if (storedLeaderInfo) {
-          console.log("🔵 8. Restauration des infos du leader:", storedLeaderInfo);
-          
-          setTeamName(storedLeaderInfo.teamName);
-          setMatricule(storedLeaderInfo.matricule);
-          setLastname(storedLeaderInfo.lastName);
-          setFirstname(storedLeaderInfo.firstName);
-          setEmail(storedLeaderInfo.email);
-          setFilterValue(storedLeaderInfo.level);
-          
-          const genderValue = getOptionValue(listGender, storedLeaderInfo.gender);
-          if (genderValue !== undefined) {
-            setGenderValue(genderValue);
-          }
-          
-          setClassValue(storedLeaderInfo.class);
-
-          // Si ESATIC et qu'on a un niveau, charger les classes
-          if (isEsatic && storedLeaderInfo.level && baseLevel.length > 0) {
-            const selectedLevel = baseLevel.find((level) => level.value === storedLeaderInfo.level);
-            if (selectedLevel && selectedLevel.classes) {
-              setListClass(selectedLevel.classes);
-            }
-          }
-        }
-
-        console.log("✅ Initialisation terminée");
+      if (storedData !== true && storedData !== false) {
+        console.log("❌ comeFromEsatic n'est pas défini correctement");
         setIsReady(true);
-
-      } catch (error) {
-        console.error("❌ Erreur lors de l'initialisation:", error);
-        setIsReady(true); // Afficher quand même le formulaire
+        return;
       }
-    };
 
-    initializeData();
-  }, []);
+      const isEsatic = storedData === true;
+      setComeFromEsatic(isEsatic);
+
+      if (!isEsatic) {
+        setListClass(listSchool);
+      }
+
+      const data = {
+        esatic: isEsatic ? 1 : 0,
+      };
+
+      console.log("🔵 3. Envoi des données à l'API:", data);
+
+      // Appel API
+      const result = await handleServiceGetLevelsList(data);
+
+      console.log("🔵 4. Résultat de l'API:", result);
+
+      // ✅ Vérifier que result existe ET qu'il a la propriété niveaux
+      if (result && result.niveaux && Array.isArray(result.niveaux)) {
+        console.log("🔵 5. Niveaux reçus:", result.niveaux);
+
+        // Transformer les données
+        const temp = result.niveaux.map(
+          (item: { id: number; libelle: string; classes: any[] }) => {
+            console.log("🔵 6. Mapping niveau:", item.libelle);
+            return {
+              value: item.id,
+              label: item.libelle,
+              classes: item.classes.map((classe: { id: number; libelle: string }) => ({
+                value: classe.id,
+                label: classe.libelle,
+              })),
+            };
+          }
+        );
+
+        console.log("🔵 7. Données transformées:", temp);
+
+        setBaseLevel(temp);
+        secureLocalStorage.setItem("levelsList", temp);
+
+        console.log("✅ Niveaux chargés avec succès:", temp.length, "niveaux");
+      } else {
+        console.log("❌ Aucune donnée de niveaux reçue ou format incorrect");
+        console.log("❌ result:", result);
+        console.error("error", "Impossible de charger les niveaux. Vérifiez votre connexion.");
+      }
+
+      // Récupérer les informations du leader
+      const storedLeaderInfo = secureLocalStorage.getItem("leaderInformation") as LeaderInformation | null;
+
+      if (storedLeaderInfo) {
+        console.log("🔵 8. Restauration des infos du leader:", storedLeaderInfo);
+        
+        setTeamName(storedLeaderInfo.teamName);
+        setMatricule(storedLeaderInfo.matricule);
+        setLastname(storedLeaderInfo.lastName);
+        setFirstname(storedLeaderInfo.firstName);
+        setEmail(storedLeaderInfo.email);
+        setFilterValue(storedLeaderInfo.level);
+        
+        const genderValue = getOptionValue(listGender, storedLeaderInfo.gender);
+        if (genderValue !== undefined) {
+          setGenderValue(genderValue);
+        }
+        
+        setClassValue(storedLeaderInfo.class);
+      }
+
+      console.log("✅ Initialisation terminée");
+      setIsReady(true);
+
+    } catch (error) {
+      console.error("❌ Erreur lors de l'initialisation:", error);
+      console.error("error", "Une erreur s'est produite lors du chargement");
+      setIsReady(true);
+    }
+  };
+
+  initializeData();
+}, []);
 
   // Gestion du changement de niveau
   const handleLevelChange = (selectedOption: { value: number }) => {
