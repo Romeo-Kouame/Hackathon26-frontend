@@ -15,205 +15,295 @@ import {
 import { handleServiceRegister } from "../../../../services/authService.tsx";
 import secureLocalStorage from "react-secure-storage";
 
+// ============================================
+// INTERFACES ET TYPES
+// ============================================
+
+interface SelectOption {
+  value: number;
+  label: string;
+}
+
+interface Level {
+  value: number;
+  label: string;
+  classes: SelectOption[];
+}
+
+interface LeaderInformation {
+  level: number;
+  matricule: string;
+  lastName: string;
+  firstName: string;
+  email: string;
+  gender: string;
+  school?: string;
+  class?: number;
+  teamName: string;
+}
+
+interface MemberInformation {
+  matricule: string;
+  lastName: string;
+  firstName: string;
+  email: string;
+  gender: string;
+  class: number;
+}
+
+interface TeamRegistrationData {
+  esatic: number;
+  niveau: number;
+  nom_groupe: string;
+  photo_groupe: string;
+  matricule_chef: string;
+  nom_chef: string;
+  prenom_chef: string;
+  classe_chef: number | undefined;
+  email_chef: string;
+  genre_chef: string;
+  matricule_m2: string;
+  nom_m2: string;
+  prenom_m2: string;
+  classe_m2: number;
+  email_m2: string;
+  genre_m2: string;
+  matricule_m3: string;
+  nom_m3: string;
+  prenom_m3: string;
+  classe_m3: number;
+  email_m3: string;
+  genre_m3: string;
+}
+
+interface RegistrationStep3Props {
+  previousStep: () => void;
+  nextStep: () => void;
+}
+
+// ============================================
+// COMPOSANT PRINCIPAL
+// ============================================
+
 export default function RegistrationStep3({
   previousStep,
-}: {
-  previousStep: any;
-  nextStep: any;
-}) {
+}: RegistrationStep3Props) {
   const [comeFromEsatic, setComeFromEsatic] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [listClass, setListClass] = useState<SelectOption[]>([]);
   const navigate = useNavigate();
 
-  // get variables in localstorage
+  // ============================================
+  // ÉTAT MEMBRE 1
+  // ============================================
+  const [matriculeMembre1, setMatriculeMembre1] = useState("");
+  const [lastnameMembre1, setLastnameMembre1] = useState("");
+  const [firstnameMembre1, setFirstnameMembre1] = useState("");
+  const [emailMembre1, setEmailMembre1] = useState("");
+  const [genderValueMembre1, setGenderValueMembre1] = useState(0);
+  const [classValueMembre1, setClassValueMembre1] = useState(0);
+  const [schoolValueMembre1, setSchoolValueMembre1] = useState(0);
+
+  // ============================================
+  // ÉTAT MEMBRE 2
+  // ============================================
+  const [matriculeMembre2, setMatriculeMembre2] = useState("");
+  const [lastnameMembre2, setLastnameMembre2] = useState("");
+  const [firstnameMembre2, setFirstnameMembre2] = useState("");
+  const [emailMembre2, setEmailMembre2] = useState("");
+  const [genderValueMembre2, setGenderValueMembre2] = useState(0);
+  const [classValueMembre2, setClassValueMembre2] = useState(0);
+  const [schoolValueMembre2, setSchoolValueMembre2] = useState(0);
+
+  // ============================================
+  // FONCTIONS UTILITAIRES
+  // ============================================
+
+  const getStoredData = <T,>(key: string): T | null => {
+    try {
+      const data = secureLocalStorage.getItem(key);
+      return data as T;
+    } catch (error) {
+      console.error(`Error retrieving ${key} from storage:`, error);
+      return null;
+    }
+  };
+
+  const loadMemberData = (
+    memberData: unknown,
+    setMatricule: (value: string) => void,
+    setLastname: (value: string) => void,
+    setFirstname: (value: string) => void,
+    setEmail: (value: string) => void,
+    setGender: (value: number) => void,
+    setClass: (value: number) => void,
+    setSchool: (value: number) => void
+  ) => {
+    if (!memberData || typeof memberData !== "object") return;
+
+    const member = memberData as Record<string, unknown>;
+
+    if (typeof member.matricule === "string") setMatricule(member.matricule);
+    if (typeof member.lastName === "string") setLastname(member.lastName);
+    if (typeof member.firstName === "string") setFirstname(member.firstName);
+    if (typeof member.email === "string") setEmail(member.email);
+
+    if (typeof member.gender === "string") {
+      const genderValue = getOptionValue(baseListGender, member.gender);
+      setGender(genderValue);
+    }
+
+    if (typeof member.class === "number") {
+      setClass(member.class);
+      setSchool(member.class);
+    }
+  };
+
+  // ============================================
+  // EFFET D'INITIALISATION
+  // ============================================
 
   useEffect(() => {
-    const storedData = secureLocalStorage.getItem("comeFromEsatic");
-    if (storedData === true || storedData === false) {
-      setComeFromEsatic(storedData);
-    }
+    try {
+      // Charger comeFromEsatic
+      const storedEsatic = getStoredData<boolean>("comeFromEsatic");
+      if (storedEsatic !== null) {
+        setComeFromEsatic(storedEsatic);
+      }
 
-    const leaderInformation = secureLocalStorage.getItem("leaderInformation");
-    const list = secureLocalStorage.getItem("levelsList");
+      // Charger les informations du leader et la liste des classes
+      const leaderInformation = getStoredData<LeaderInformation>("leaderInformation");
+      const levelsList = getStoredData<Level[]>("levelsList");
 
-    if (leaderInformation && Array.isArray(list)) {
-      const decodedList = list;
-      const levelValue = leaderInformation["level"];
+      if (leaderInformation && Array.isArray(levelsList)) {
+        const levelValue = leaderInformation.level;
 
-      decodedList.forEach(
-        (level: {
-          [x: string]: React.SetStateAction<{ value: number; label: string }[]>;
-        }) => {
-          if (level["value"] === levelValue) {
-            setListClass(level["classes"]);
+        levelsList.forEach((level: Level) => {
+          if (level.value === levelValue && Array.isArray(level.classes)) {
+            setListClass(level.classes);
           }
-        }
-      );
-    }
+        });
+      }
 
-    const user1 = secureLocalStorage.getItem("informationAboutMembre1");
-    if (user1) {
-      setMatriculeMembre1(user1["matricule"]);
-      setLastnameMembre1(user1["lastName"]);
-      setFirstnameMembre1(user1["firstName"]);
-      setEmailMembre1(user1["email"]);
-      setGenderValueMembre1(getOptionValue(listGenderMembre1, user1["gender"]));
-      setClassValueMembre1(getOptionValue(listGenderMembre1, user1["gender"]));
-      setSchoolValueMembre1(getOptionValue(listClass, user1["school"]));
-    }
+      // Charger les données du membre 1
+      const user1 = getStoredData<MemberInformation>("informationAboutMembre1");
+      if (user1) {
+        loadMemberData(
+          user1,
+          setMatriculeMembre1,
+          setLastnameMembre1,
+          setFirstnameMembre1,
+          setEmailMembre1,
+          setGenderValueMembre1,
+          setClassValueMembre1,
+          setSchoolValueMembre1
+        );
+      }
 
-    const user2 = secureLocalStorage.getItem("informationAboutMembre2");
-    if (user2) {
-      setMatriculeMembre2(user2["matricule"]);
-      setLastnameMembre2(user2["lastName"]);
-      setFirstnameMembre2(user2["firstName"]);
-      setEmailMembre2(user2["email"]);
-      setGenderValueMembre2(getOptionValue(listGenderMembre2, user2["gender"]));
-      setClassValueMembre2(getOptionValue(listGenderMembre2, user2["gender"]));
-      setSchoolValueMembre2(getOptionValue(listClass, user2["school"]));
-    }
+      // Charger les données du membre 2
+      const user2 = getStoredData<MemberInformation>("informationAboutMembre2");
+      if (user2) {
+        loadMemberData(
+          user2,
+          setMatriculeMembre2,
+          setLastnameMembre2,
+          setFirstnameMembre2,
+          setEmailMembre2,
+          setGenderValueMembre2,
+          setClassValueMembre2,
+          setSchoolValueMembre2
+        );
+      }
 
-    setIsReady(true);
+      setIsReady(true);
+    } catch (error) {
+      console.error("Error loading data:", error);
+      setIsReady(true); // Permettre l'affichage même en cas d'erreur
+    }
   }, []);
 
-  // matricule membre 1
-  const [matriculeMembre1, setMatriculeMembre1] = useState("");
-  const handleMAtriculeMembre1Change = (event: { target: { value: any } }) => {
+  // ============================================
+  // HANDLERS D'ÉVÉNEMENTS
+  // ============================================
+
+  const handleMatriculeMembre1Change = (event: React.ChangeEvent<HTMLInputElement>) => {
     setMatriculeMembre1(event.target.value);
   };
 
-  // nom du membre 1
-  const [lastnameMembre1, setLastnameMembre1] = useState("");
-  const handleLastnameMembre1Change = (event: { target: { value: any } }) => {
+  const handleLastnameMembre1Change = (event: React.ChangeEvent<HTMLInputElement>) => {
     setLastnameMembre1(event.target.value);
   };
 
-  // prenom du membre 1
-  const [firstnameMembre1, setFirstnameMembre1] = useState("");
-  const handleFirstNameMembre1Change = (event: { target: { value: any } }) => {
+  const handleFirstNameMembre1Change = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFirstnameMembre1(event.target.value);
   };
 
-  // email du membre 1
-  const [emailMembre1, setEmailMembre1] = useState("");
-  const handleEmailMembre1Change = (event: { target: { value: any } }) => {
+  const handleEmailMembre1Change = (event: React.ChangeEvent<HTMLInputElement>) => {
     setEmailMembre1(event.target.value);
   };
 
-  // variable du genre membre 1
-
-  const [GenderValueMembre1, setGenderValueMembre1] = useState(0);
-  const listGenderMembre1 = baseListGender;
-
-  const handleGenderChangeMembre1 = (selectedOption: {
-    value: React.SetStateAction<number>;
-  }) => {
+  const handleGenderChangeMembre1 = (selectedOption: SelectOption) => {
     setGenderValueMembre1(selectedOption.value);
   };
 
-  // variables de la classe du membre 1
-
-  const [ClassValueMembre1, setClassValueMembre1] = useState(0);
-  const [listClass, setListClass] = useState<
-    { value: number; label: string }[]
-  >([]);
-
-  const handleClassChangeMembre1 = (selectedOption: {
-    value: React.SetStateAction<number>;
-  }) => {
+  const handleClassChangeMembre1 = (selectedOption: SelectOption) => {
     setClassValueMembre1(selectedOption.value);
   };
 
-  // school member 1
-
-  const [schoolValueMembre1, setSchoolValueMembre1] = useState(0);
-  const handleSchoolMembre1Change = (selectedOption: {
-    value: React.SetStateAction<number>;
-  }) => {
+  const handleSchoolMembre1Change = (selectedOption: SelectOption) => {
     setSchoolValueMembre1(selectedOption.value);
   };
 
-  // matricule membre 2
-  const [matriculeMembre2, setMatriculeMembre2] = useState("");
-  const handleMAtriculeMembre2Change = (event: { target: { value: any } }) => {
+  const handleMatriculeMembre2Change = (event: React.ChangeEvent<HTMLInputElement>) => {
     setMatriculeMembre2(event.target.value);
   };
 
-  // nom du membre 2
-  const [lastnameMembre2, setLastnameMembre2] = useState("");
-  const handleLastnameMembre2Change = (event: { target: { value: any } }) => {
+  const handleLastnameMembre2Change = (event: React.ChangeEvent<HTMLInputElement>) => {
     setLastnameMembre2(event.target.value);
   };
 
-  // prenom du membre 2
-  const [firstnameMembre2, setFirstnameMembre2] = useState("");
-  const handleFirstNameMembre2Change = (event: { target: { value: any } }) => {
+  const handleFirstNameMembre2Change = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFirstnameMembre2(event.target.value);
   };
 
-  // email du membre 2
-  const [emailMembre2, setEmailMembre2] = useState("");
-  const handleEmailMembre2Change = (event: { target: { value: any } }) => {
+  const handleEmailMembre2Change = (event: React.ChangeEvent<HTMLInputElement>) => {
     setEmailMembre2(event.target.value);
   };
 
-  // variable du genre membre 2
-
-  const [GenderValueMembre2, setGenderValueMembre2] = useState(0);
-  const listGenderMembre2 = baseListGender;
-
-  const handleGenderChangeMembre2 = (selectedOption: {
-    value: React.SetStateAction<number>;
-  }) => {
+  const handleGenderChangeMembre2 = (selectedOption: SelectOption) => {
     setGenderValueMembre2(selectedOption.value);
   };
 
-  // variables de la classe du membre 2
-
-  const [ClassValueMembre2, setClassValueMembre2] = useState(0);
-
-  const handleClassChangeMembre2 = (selectedOption: {
-    value: React.SetStateAction<number>;
-  }) => {
+  const handleClassChangeMembre2 = (selectedOption: SelectOption) => {
     setClassValueMembre2(selectedOption.value);
   };
 
-  // school member 1
-
-  const [schoolValueMembre2, setSchoolValueMembre2] = useState(0);
-  const handleSchoolMembre2Change = (selectedOption: {
-    value: React.SetStateAction<number>;
-  }) => {
+  const handleSchoolMembre2Change = (selectedOption: SelectOption) => {
     setSchoolValueMembre2(selectedOption.value);
   };
 
-  // change the page
-
-  const goToPreviousStep = () => {
-    storeInLocalStorage();
-    previousStep();
-  };
-
-  // store in localStorage
+  // ============================================
+  // GESTION DU STOCKAGE ET NAVIGATION
+  // ============================================
 
   const storeInLocalStorage = () => {
-    const informationAboutMembre1 = {
+    const informationAboutMembre1: MemberInformation = {
       matricule: matriculeMembre1,
       lastName: lastnameMembre1,
       firstName: firstnameMembre1,
       email: emailMembre1,
-      gender: getOptionLabel(listGenderMembre1, GenderValueMembre1),
-      class: comeFromEsatic ? ClassValueMembre1 : schoolValueMembre1,
+      gender: getOptionLabel(baseListGender, genderValueMembre1),
+      class: comeFromEsatic ? classValueMembre1 : schoolValueMembre1,
     };
 
-    const informationAboutMembre2 = {
+    const informationAboutMembre2: MemberInformation = {
       matricule: matriculeMembre2,
       lastName: lastnameMembre2,
       firstName: firstnameMembre2,
       email: emailMembre2,
-      gender: getOptionLabel(listGenderMembre2, GenderValueMembre2),
-      class: comeFromEsatic ? ClassValueMembre2 : schoolValueMembre2,
+      gender: getOptionLabel(baseListGender, genderValueMembre2),
+      class: comeFromEsatic ? classValueMembre2 : schoolValueMembre2,
     };
 
     secureLocalStorage.setItem(
@@ -227,190 +317,207 @@ export default function RegistrationStep3({
     );
   };
 
-  const handleSubmit = (event: { preventDefault: () => void }) => {
+  const goToPreviousStep = () => {
+    storeInLocalStorage();
+    previousStep();
+  };
+
+  // ============================================
+  // VALIDATION ET SOUMISSION
+  // ============================================
+
+  const validateForm = (): boolean => {
+    // Validation membre 1
+    if (!lastnameMembre1.trim() || !firstnameMembre1.trim() || !emailMembre1.trim()) {
+      alert("Veuillez remplir tous les champs obligatoires pour le Membre 2");
+      return false;
+    }
+
+    if (comeFromEsatic && !matriculeMembre1.trim()) {
+      alert("Le matricule du Membre 2 est requis");
+      return false;
+    }
+
+    if (genderValueMembre1 === 0) {
+      alert("Veuillez sélectionner le genre du Membre 2");
+      return false;
+    }
+
+    if (comeFromEsatic && classValueMembre1 === 0) {
+      alert("Veuillez sélectionner la classe du Membre 2");
+      return false;
+    }
+
+    if (!comeFromEsatic && schoolValueMembre1 === 0) {
+      alert("Veuillez sélectionner l'école du Membre 2");
+      return false;
+    }
+
+    // Validation membre 2
+    if (!lastnameMembre2.trim() || !firstnameMembre2.trim() || !emailMembre2.trim()) {
+      alert("Veuillez remplir tous les champs obligatoires pour le Membre 3");
+      return false;
+    }
+
+    if (comeFromEsatic && !matriculeMembre2.trim()) {
+      alert("Le matricule du Membre 3 est requis");
+      return false;
+    }
+
+    if (genderValueMembre2 === 0) {
+      alert("Veuillez sélectionner le genre du Membre 3");
+      return false;
+    }
+
+    if (comeFromEsatic && classValueMembre2 === 0) {
+      alert("Veuillez sélectionner la classe du Membre 3");
+      return false;
+    }
+
+    if (!comeFromEsatic && schoolValueMembre2 === 0) {
+      alert("Veuillez sélectionner l'école du Membre 3");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
     storeInLocalStorage();
 
-    const leaderInformation = secureLocalStorage.getItem("leaderInformation");
-    const member1 = secureLocalStorage.getItem("informationAboutMembre1");
-    const member2 = secureLocalStorage.getItem("informationAboutMembre2");
+    try {
+      const leaderInformation = getStoredData<LeaderInformation>("leaderInformation");
+      const member1 = getStoredData<MemberInformation>("informationAboutMembre1");
+      const member2 = getStoredData<MemberInformation>("informationAboutMembre2");
 
-    if (leaderInformation && member1 && member2) {
-      const decodedInformation = leaderInformation;
-      const decodedMember1 = member1;
-      const decodedMember2 = member2;
+      if (!leaderInformation || !member1 || !member2) {
+        throw new Error("Données manquantes. Veuillez recommencer l'inscription.");
+      }
 
-      const newTeam = {
+      const newTeam: TeamRegistrationData = {
         esatic: comeFromEsatic ? 1 : 0,
-
-        niveau: decodedInformation["level"],
-        nom_groupe: decodedInformation["teamName"],
+        niveau: leaderInformation.level,
+        nom_groupe: leaderInformation.teamName,
         photo_groupe: "pas_de_photo.png",
-
-        matricule_chef: decodedInformation["matricule"],
-        nom_chef: decodedInformation["lastName"],
-        prenom_chef: decodedInformation["firstName"],
-        classe_chef: decodedInformation["class"],
-        email_chef: decodedInformation["email"],
-        genre_chef: decodedInformation["gender"],
-
-        matricule_m2: decodedMember1["matricule"],
-        nom_m2: decodedMember1["lastName"],
-        prenom_m2: decodedMember1["firstName"],
-        classe_m2: decodedMember1["class"],
-        email_m2: decodedMember1["email"],
-        genre_m2: decodedMember1["gender"],
-
-        matricule_m3: decodedMember2["matricule"],
-        nom_m3: decodedMember2["lastName"],
-        prenom_m3: decodedMember2["firstName"],
-        classe_m3: decodedMember2["class"],
-        email_m3: decodedMember2["email"],
-        genre_m3: decodedMember2["gender"],
+        matricule_chef: leaderInformation.matricule,
+        nom_chef: leaderInformation.lastName,
+        prenom_chef: leaderInformation.firstName,
+        classe_chef: leaderInformation.class,
+        email_chef: leaderInformation.email,
+        genre_chef: leaderInformation.gender,
+        matricule_m2: member1.matricule,
+        nom_m2: member1.lastName,
+        prenom_m2: member1.firstName,
+        classe_m2: member1.class,
+        email_m2: member1.email,
+        genre_m2: member1.gender,
+        matricule_m3: member2.matricule,
+        nom_m3: member2.lastName,
+        prenom_m3: member2.firstName,
+        classe_m3: member2.class,
+        email_m3: member2.email,
+        genre_m3: member2.gender,
       };
 
-      handleServiceRegister(newTeam).then((result) => {
-        if (result) {
-          secureLocalStorage.removeItem("leaderInformation");
-          secureLocalStorage.removeItem("informationAboutMembre1");
-          secureLocalStorage.removeItem("informationAboutMembre2");
+      const result = await handleServiceRegister(newTeam);
 
-          setTimeout(() => {
-            setIsLoading(false);
-            navigate("/hackathon/auth/SuccessRegistration");
-          }, 3000);
-        }
-      });
+      if (result) {
+        // Nettoyage du localStorage
+        secureLocalStorage.removeItem("leaderInformation");
+        secureLocalStorage.removeItem("informationAboutMembre1");
+        secureLocalStorage.removeItem("informationAboutMembre2");
+        secureLocalStorage.removeItem("comeFromEsatic");
+        secureLocalStorage.removeItem("levelsList");
+
+        setTimeout(() => {
+          setIsLoading(false);
+          navigate("/hackathon/auth/SuccessRegistration");
+        }, 3000);
+      } else {
+        throw new Error("Échec de l'inscription");
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Une erreur est survenue lors de l'inscription. Veuillez réessayer."
+      );
+      setIsLoading(false);
     }
   };
 
+  // ============================================
+  // RENDU
+  // ============================================
+
+  if (!isReady) {
+    return (
+      <div className="h-screen w-full flex justify-center items-center">
+        <HashLoader size={60} color="#F94C10" loading={true} />
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
-      {isReady ? (
-        <div className="w-full mx-auto max-w-4xl md:bg-white md:p-9 mb-9 md:shadow-xl md:rounded-3xl">
-          <form onSubmit={handleSubmit}>
-            <div className="w-full max-w-3xl mx-auto md:flex md:gap-6 md:p-9">
-              <div className="md:w-1/2 mx-auto">
-                <div className="flex flex-col gap-3">
-                  <h5 className="text-xl mb-4 font-bold text-gray-900 dark:text-white">
-                    Membre 2
-                  </h5>
-                  {comeFromEsatic === true ? (
-                    <div className="flex flex-col gap-3">
-                      <Labelui label="Matricule" />
-                      <InputField
-                        lenght={30}
-                        onChange={handleMAtriculeMembre1Change}
-                        value={matriculeMembre1}
-                        placeholder="XX-ESATICXXXXX"
-                        type="text"
-                      />
-                    </div>
-                  ) : null}
-
-                  <Labelui label="Nom" />
-                  <InputField
-                    lenght={30}
-                    onChange={handleLastnameMembre1Change}
-                    value={lastnameMembre1}
-                    placeholder="koffi"
-                    type="text"
-                  />
-
-                  <Labelui label="Prénom" />
-                  <InputField
-                    lenght={30}
-                    onChange={handleFirstNameMembre1Change}
-                    value={firstnameMembre1}
-                    placeholder="ange"
-                    type="text"
-                  />
-
-                  <Labelui label="Email" />
-                  <InputField
-                    lenght={30}
-                    onChange={handleEmailMembre1Change}
-                    value={emailMembre1}
-                    placeholder="koffi@gmail.com"
-                    type="email"
-                  />
-
-                  <Labelui label="Genre" />
-                  <SelectUi
-                    placeholder="Choisissez"
-                    options={listGenderMembre1}
-                    filterValue={GenderValueMembre1}
-                    onChange={handleGenderChangeMembre1}
-                  />
-
-                  {comeFromEsatic === true ? (
-                    <div className="flex flex-col gap-3">
-                      <Labelui label="Classe" />
-                      <SelectUi
-                        placeholder="Choisissez"
-                        options={listClass}
-                        filterValue={ClassValueMembre1}
-                        onChange={handleClassChangeMembre1}
-                      />
-                    </div>
-                  ) : null}
-
-                  {comeFromEsatic === false ? (
-                    <div className="flex flex-col gap-3">
-                      <Labelui label="École" />
-                      <SelectUi
-                        placeholder="Choisissez"
-                        options={listClass}
-                        filterValue={schoolValueMembre1}
-                        onChange={handleSchoolMembre1Change}
-                      />
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="md:w-1/2 mt-8 md:mt-0 flex flex-col gap-3">
+      <div className="w-full mx-auto max-w-4xl md:bg-white md:p-9 mb-9 md:shadow-xl md:rounded-3xl">
+        <form onSubmit={handleSubmit}>
+          <div className="w-full max-w-3xl mx-auto md:flex md:gap-6 md:p-9">
+            {/* ========== MEMBRE 2 ========== */}
+            <div className="md:w-1/2 mx-auto">
+              <div className="flex flex-col gap-3">
                 <h5 className="text-xl mb-4 font-bold text-gray-900 dark:text-white">
-                  Membre 3
+                  Membre 2
                 </h5>
 
-                {comeFromEsatic === true ? (
-                  <div className="flex flex-col gap-3">
+                {comeFromEsatic && (
+                  <>
                     <Labelui label="Matricule" />
                     <InputField
-                      lenght={30}
-                      onChange={handleMAtriculeMembre2Change}
-                      value={matriculeMembre2}
+                      label="Matricule"
+                      length={30}
+                      onChange={handleMatriculeMembre1Change}
+                      value={matriculeMembre1}
                       placeholder="XX-ESATICXXXXX"
                       type="text"
                     />
-                  </div>
-                ) : null}
+                  </>
+                )}
 
                 <Labelui label="Nom" />
                 <InputField
-                  lenght={30}
-                  onChange={handleLastnameMembre2Change}
-                  value={lastnameMembre2}
-                  placeholder="koffi"
+                  label="Nom"
+                  length={30}
+                  onChange={handleLastnameMembre1Change}
+                  value={lastnameMembre1}
+                  placeholder="Koffi"
                   type="text"
                 />
 
                 <Labelui label="Prénom" />
                 <InputField
-                  lenght={30}
-                  onChange={handleFirstNameMembre2Change}
-                  value={firstnameMembre2}
-                  placeholder="emmanuel"
+                  label="Prénom"
+                  length={30}
+                  onChange={handleFirstNameMembre1Change}
+                  value={firstnameMembre1}
+                  placeholder="Ange"
                   type="text"
                 />
 
                 <Labelui label="Email" />
                 <InputField
-                  lenght={30}
-                  onChange={handleEmailMembre2Change}
-                  value={emailMembre2}
+                  label="Email"
+                  length={30}
+                  onChange={handleEmailMembre1Change}
+                  value={emailMembre1}
                   placeholder="koffi@gmail.com"
                   type="email"
                 />
@@ -418,64 +525,139 @@ export default function RegistrationStep3({
                 <Labelui label="Genre" />
                 <SelectUi
                   placeholder="Choisissez"
-                  options={listGenderMembre2}
-                  filterValue={GenderValueMembre2}
-                  onChange={handleGenderChangeMembre2}
+                  options={baseListGender}
+                  filterValue={genderValueMembre1}
+                  onChange={handleGenderChangeMembre1}
                 />
 
-                {comeFromEsatic === true ? (
-                  <div className="flex flex-col gap-3">
+                {comeFromEsatic ? (
+                  <>
                     <Labelui label="Classe" />
                     <SelectUi
                       placeholder="Choisissez"
                       options={listClass}
-                      filterValue={ClassValueMembre2}
-                      onChange={handleClassChangeMembre2}
+                      filterValue={classValueMembre1}
+                      onChange={handleClassChangeMembre1}
                     />
-                  </div>
-                ) : null}
-
-                {comeFromEsatic === false ? (
-                  <div className="flex flex-col gap-3">
+                  </>
+                ) : (
+                  <>
                     <Labelui label="École" />
                     <SelectUi
                       placeholder="Choisissez"
                       options={listClass}
-                      filterValue={schoolValueMembre2}
-                      onChange={handleSchoolMembre2Change}
+                      filterValue={schoolValueMembre1}
+                      onChange={handleSchoolMembre1Change}
                     />
-                  </div>
-                ) : null}
+                  </>
+                )}
               </div>
             </div>
-            <div className="flex justify-center gap-4 mt-9">
-              <Button
-                isLoading={false}
-                onClick={goToPreviousStep}
-                type="button"
-                label="Précédent"
-                isDisable={false}
-                isReady={true}
+
+            {/* ========== MEMBRE 3 ========== */}
+            <div className="md:w-1/2 mt-8 md:mt-0 flex flex-col gap-3">
+              <h5 className="text-xl mb-4 font-bold text-gray-900 dark:text-white">
+                Membre 3
+              </h5>
+
+              {comeFromEsatic && (
+                <>
+                  <Labelui label="Matricule" />
+                  <InputField
+                    label="Matricule"
+                    length={30}
+                    onChange={handleMatriculeMembre2Change}
+                    value={matriculeMembre2}
+                    placeholder="XX-ESATICXXXXX"
+                    type="text"
+                  />
+                </>
+              )}
+
+              <Labelui label="Nom" />
+              <InputField
+                label="Nom"
+                length={30}
+                onChange={handleLastnameMembre2Change}
+                value={lastnameMembre2}
+                placeholder="Koffi"
+                type="text"
               />
 
-              <Button
-                onClick={() => {
-                  return;
-                }}
-                isLoading={isLoading}
-                type="submit"
-                label="Soumettre"
-                isDisable={false}
-                isReady={true}
+              <Labelui label="Prénom" />
+              <InputField
+                label="Prénom"
+                length={30}
+                onChange={handleFirstNameMembre2Change}
+                value={firstnameMembre2}
+                placeholder="Emmanuel"
+                type="text"
               />
+
+              <Labelui label="Email" />
+              <InputField
+                label="Email"
+                length={30}
+                onChange={handleEmailMembre2Change}
+                value={emailMembre2}
+                placeholder="koffi@gmail.com"
+                type="email"
+              />
+
+              <Labelui label="Genre" />
+              <SelectUi
+                placeholder="Choisissez"
+                options={baseListGender}
+                filterValue={genderValueMembre2}
+                onChange={handleGenderChangeMembre2}
+              />
+
+              {comeFromEsatic ? (
+                <>
+                  <Labelui label="Classe" />
+                  <SelectUi
+                    placeholder="Choisissez"
+                    options={listClass}
+                    filterValue={classValueMembre2}
+                    onChange={handleClassChangeMembre2}
+                  />
+                </>
+              ) : (
+                <>
+                  <Labelui label="École" />
+                  <SelectUi
+                    placeholder="Choisissez"
+                    options={listClass}
+                    filterValue={schoolValueMembre2}
+                    onChange={handleSchoolMembre2Change}
+                  />
+                </>
+              )}
             </div>
-          </form>
-        </div>
-      ) : (
-        <div className="h-screen w-full flex justify-center items-center">
-          <HashLoader size={60} color="#F94C10" loading={!isReady} />
-        </div>
-      )}
+          </div>
+
+          {/* ========== BOUTONS ========== */}
+          <div className="flex justify-center gap-4 mt-9">
+            <Button
+              isLoading={false}
+              onClick={goToPreviousStep}
+              type="button"
+              label="Précédent"
+              isDisable={isLoading}
+              isReady={true}
+            />
+
+            <Button
+              onClick={() => {}}
+              isLoading={isLoading}
+              type="submit"
+              label="Soumettre"
+              isDisable={isLoading}
+              isReady={true}
+            />
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
