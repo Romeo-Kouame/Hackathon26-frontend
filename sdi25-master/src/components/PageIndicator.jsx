@@ -9,7 +9,7 @@ import "../style/pagination.css";
 import React from "react";
 
 
-export function PaginatedItems({ itemsPerPage, item, tableHeader, Items }) {
+export function PaginatedItems({ itemsPerPage, item = [], tableHeader, Items }) {
   const [itemOffset, setItemOffset] = useState(0);
   const endOffset = itemOffset + itemsPerPage;
   const currentItems = item.slice(itemOffset, endOffset);

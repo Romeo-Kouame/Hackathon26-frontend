@@ -144,7 +144,7 @@ export default function RestaurantView() {
               isReady={true}
               isLoading={false}
             />
-            {commandList.length !== 0 ? (
+            {Array.isArray(commandList) && commandList.length !== 0 ? (
               <PaginatedItems
                 itemsPerPage={4}
                 item={commandList}

@@ -403,28 +403,32 @@ export default function RegistrationStep3({
 
       const newTeam: TeamRegistrationData = {
         esatic: comeFromEsatic ? 1 : 0,
-        niveau: leaderInformation.level,
-        nom_groupe: leaderInformation.teamName,
+        niveau: leaderInformation.level ?? 0,
+        nom_groupe: leaderInformation.teamName ?? "Equipe",
         photo_groupe: "pas_de_photo.png",
-        matricule_chef: leaderInformation.matricule,
-        nom_chef: leaderInformation.lastName,
-        prenom_chef: leaderInformation.firstName,
-        classe_chef: leaderInformation.class,
-        email_chef: leaderInformation.email,
-        genre_chef: leaderInformation.gender,
-        matricule_m2: member1.matricule,
-        nom_m2: member1.lastName,
-        prenom_m2: member1.firstName,
-        classe_m2: member1.class,
-        email_m2: member1.email,
-        genre_m2: member1.gender,
-        matricule_m3: member2.matricule,
-        nom_m3: member2.lastName,
-        prenom_m3: member2.firstName,
-        classe_m3: member2.class,
-        email_m3: member2.email,
-        genre_m3: member2.gender,
+
+        matricule_chef: leaderInformation.matricule ?? "",
+        nom_chef: leaderInformation.lastName ?? "",
+        prenom_chef: leaderInformation.firstName ?? "",
+        classe_chef: comeFromEsatic ? leaderInformation.class ?? 0 : 0,
+        email_chef: leaderInformation.email ?? "",
+        genre_chef: leaderInformation.gender ?? "",
+
+        matricule_m2: member1.matricule ?? "",
+        nom_m2: member1.lastName ?? "",
+        prenom_m2: member1.firstName ?? "",
+        classe_m2: member1.class ?? 0,
+        email_m2: member1.email ?? "",
+        genre_m2: member1.gender ?? "",
+
+        matricule_m3: member2.matricule ?? "",
+        nom_m3: member2.lastName ?? "",
+        prenom_m3: member2.firstName ?? "",
+        classe_m3: member2.class ?? 0,
+        email_m3: member2.email ?? "",
+        genre_m3: member2.gender ?? "",
       };
+
 
       const result = await handleServiceRegister(newTeam);
 

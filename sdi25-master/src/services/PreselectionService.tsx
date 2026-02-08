@@ -181,7 +181,7 @@ export const handleServiceQualifyAutomaticallyTeams = async (data: object) => {
     "Bearer " + secureLocalStorage.getItem("session_token")!;
 
   try {
-    const uri = `${apiUrl}/groupe/autoselect`;
+    const uri = `${apiUrl}/api/groupe/autoselect`;
     const response = await axios.post(uri, data);
     const status = response.data.status;
 

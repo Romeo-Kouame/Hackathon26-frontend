@@ -1,6 +1,6 @@
 export const niveau1 = [
   {
-    value: 1,
+    value: 107,
     label: "MP2IA",
   },
   {
@@ -9,19 +9,19 @@ export const niveau1 = [
   },
   {
     value: 3,
-    label: "SRIT1A",
+    label: "SRIT 1A",
   },
   {
     value: 4,
-    label: "SRIT1B",
+    label: "SRIT 1B",
   },
   {
     value: 5,
-    label: "SRIT1C",
+    label: "SRIT 1C",
   },
   {
     value: 6,
-    label: "TWIN1",
+    label: "TWIN 1",
   },
   {
     value: 7,

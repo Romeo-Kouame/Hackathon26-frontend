@@ -37,6 +37,11 @@ interface ClassOption {
   value: number;
   label: string;
 }
+// type Level = {
+//   value: number;
+//   label: string;
+//   classes?: any[]; // ou mieux : ClassType[]
+// };
 
 export default function RegistrationStep2({
   previousStep,
@@ -118,6 +123,16 @@ export default function RegistrationStep2({
 
         setBaseLevel(temp);
         secureLocalStorage.setItem("levelsList", temp);
+        // // 🔥 Charger automatiquement les classes si un niveau est déjà sélectionné
+        // if (filterLevelValue !== 0) {
+        //   const selectedLevel = temp.find(
+        //     (level: Level) => level.value === filterLevelValue
+        //   );
+
+        //   if (selectedLevel && Array.isArray(selectedLevel.classes)) {
+        //     setListClass(selectedLevel.classes);
+        //   }
+        // }
 
         console.log("✅ Niveaux chargés avec succès:", temp.length, "niveaux");
       } else {
