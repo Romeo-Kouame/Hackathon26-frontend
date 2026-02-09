@@ -35,26 +35,26 @@ export default function PannelView() {
 
   let pannelist = [
     {
-      name: "Dr. Linda Nanan Vallée",
-      role: "Modératrice du pannel",
+      name: "Nom Modérateur",
+      role: "Modérateur du pannel",
       image:
-        "https://cio-mag.com/wp-content/uploads/2019/09/Linda-Nanan-Vallee1.png",
+        "",
     },
     {
-      name: "Paul GINIES",
+      name: "Nom Panéliste 1",
       role: "Panéliste",
-      image: "https://takafaeducation.com/wp-content/images/team/paul.JPG",
+      image: "",
     },
     {
-      name: "Cyriac GBOGOU",
+      name: "Nom Panéliste 2",
       role: "Panéliste",
       image:
-        "https://www.socialnetlink.org/wp-content/uploads/2018/12/cyriack.jpg",
+        "",
     },
     {
-      name: "ANSUT",
+      name: "Nom Panéliste 3",
       role: "Panéliste",
-      image: "https://media-files.abidjan.net/photo/ansut-02.jpg",
+      image: "",
     },
   ];
 
@@ -352,7 +352,7 @@ export default function PannelView() {
         <div className="container px-5 mx-auto flex flex-wrap">
           <div className="flex w-full mb-20 flex-wrap">
             <h1 className="sm:text-3xl text-2xl font-medium title-font text-gray-900 lg:w-1/3 lg:mb-0 mb-4">
-              Gallerie de la JETIC 2023-2024
+              Gallerie de la JETIC 2025
             </h1>
             <p className="lg:pl-6 lg:w-2/3 mx-auto leading-relaxed text-base">
               La JETIC fut un moment pour chaque étudiant, de partage
