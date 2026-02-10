@@ -97,7 +97,7 @@ export const handleServiceUpdateClass = async (data: object) => {
     "Bearer " + secureLocalStorage.getItem("session_token")!;
 
   try {
-    const uri = `${apiUrl}/classe/update`;
+    const uri = `${apiUrl}/api/classe/update`;
     const response = await axios.post(uri, data);
     const status = response.data.status;
 

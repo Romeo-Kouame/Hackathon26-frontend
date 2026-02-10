@@ -177,17 +177,17 @@ export default function HackathonCompenent() {
                         {element.pco_1} <br /> {element.pco_2}
                       </td>
                       {element.inscription === 1 ? (
-                        <button
-                          onClick={() => handleToggleHackathon(element.id)}
-                          className="w-full pt-2"
-                        >
-                          <td className="px-6 py-4 bg-[#F94C10]">
+                        <td className="px-6 py-4 bg-[#F94C10]">
+                          <button
+                            onClick={() => handleToggleHackathon(element.id)}
+                            className="w-full pt-2"
+                          >
                             <FontAwesomeIcon
                               className="text-white text-2xl"
                               icon={faCheck}
                             />
-                          </td>
-                        </button>
+                          </button>
+                        </td>
                       ) : (
                         <button
                           onClick={() => handleToggleHackathon(element.id)}
