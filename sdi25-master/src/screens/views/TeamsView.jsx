@@ -17,7 +17,6 @@ import {
 
 export default function TeamsView() {
   const [isLoading, setIsLoading] = useState(false);
-  const [isButtonLoading, setIsButtonLoading] = useState(false);
   const [groupList, setGroupList] = useState([]);
 
   // variable for select
@@ -39,12 +38,25 @@ export default function TeamsView() {
     setIsChecked(event.target.checked);
   };
 
-  // useEffect
+  // useEffect - Chargement initial
   useEffect(() => {
     setIsLoading(true);
     getLevels();
-    getGroups();
   }, []);
+
+  // Charger les groupes quand les filtres changent
+  useEffect(() => {
+    getGroups();
+  }, [selectionValue, isChecked]);
+
+  // Actualisation automatique des groupes toutes les 15 secondes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      getGroups();
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [selectionValue, isChecked]);
 
   // get information about level
   function getLevels() {
@@ -62,14 +74,12 @@ export default function TeamsView() {
   }
 
   async function getGroups() {
-    setIsButtonLoading(true);
     const data = {
       statut: isChecked ? 1 : 0,
       niveauId: selectionValue,
     };
     const result = await handleServiceGetTeams(data);
     setGroupList(result);
-    setIsButtonLoading(false);
   }
 
   // get information about group list
@@ -317,12 +327,12 @@ export default function TeamsView() {
                   // isLoading={isLoading}
                 />
                 <Button
-                  label="valider"
+                  label="Actualiser"
                   onClick={() => getGroups()}
                   type="button"
                   isDisable={false}
                   isReady={true}
-                  isLoading={isButtonLoading}
+                  isLoading={false}
                 />
               </div>
             </div>
